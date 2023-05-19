@@ -481,12 +481,24 @@ std::string JSIdent(const GeneratorOptions& options,
   return result;
 }
 
+std::string JSIdent(const FieldDescriptor* field) {
+  if (field->type() == FieldDescriptor::TYPE_GROUP) {
+    return field->message_type()->name();
+  } else {
+    return field->name();
+  }
+}
+
 std::string JSObjectFieldName(const GeneratorOptions& options,
-                              const FieldDescriptor* field) {
+                              const FieldDescriptor* field,
+                              const bool isToObject = false) {
   std::string name = JSIdent(options, field,
                              /* is_upper_camel = */ false,
                              /* is_map = */ false,
                              /* drop_list = */ false);
+  if (isToObject) {
+    name = JSIdent(field);
+  }
   if (IsReserved(name)) {
     name = "pb_" + name;
   }
@@ -2244,7 +2256,7 @@ void Generator::GenerateClassToObject(const GeneratorOptions& options,
       "  }\n"
       "  return obj;\n"
       "};\n"
-      "}\n"
+      "};\n"
       "\n"
       "\n",
       "classname", GetMessagePath(options, desc));
@@ -2302,7 +2314,7 @@ void Generator::GenerateClassFieldToObject(const GeneratorOptions& options,
                                            io::Printer* printer,
                                            const FieldDescriptor* field) const {
   printer->Print("$fieldname$: ", "fieldname",
-                 JSObjectFieldName(options, field));
+                 JSObjectFieldName(options, field, true));
 
   if (field->is_map()) {
     const FieldDescriptor* value_field = MapFieldValue(field);
