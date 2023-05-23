@@ -30,7 +30,7 @@ jobs:
 
       - name: Build Tool
         run: |
-          pnpm install --frozen-lockfile
+          pnpm i
           pnpm build:generator
 
       - name: Archive Artifacts
