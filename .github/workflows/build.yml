@@ -1,0 +1,45 @@
+name: Build Generator
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        platform: [linux, mac, windows]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set Up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 20
+
+      - name: Enable PNPM
+        run: corepack enable
+
+      - name: Set Up Bazel
+        uses: bazelbuild/setup-bazel@v3
+
+      - name: Build Tool
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build:generator
+
+      - name: Archive Artifacts
+        run: |
+          mkdir -p artifacts
+          cp bazel-bin/generator/protoc-gen-js artifacts/protoc-gen-js_${{ matrix.platform }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: protoc-gen-js
+          path: artifacts
